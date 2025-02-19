@@ -1,0 +1,39 @@
+name=John%20Doe&email=john%40example.com&password=password123&role=member
+{"username":"testingweb","password":"minhaj@2211","age":"2"}
+{
+    "username": "JohnDoe",
+    "email": "john@example.com",
+    "password": "password123",
+    "role": "member"
+}
+{
+    "username": "JohnDoe",
+    "password": "password123",
+    "age": 25
+}
+{
+    "username": "JohnDoe",
+    "password": "password123",
+    "age": 25
+}
+Array
+(
+    [username] => JohnDoe
+    [password] => password123
+    [age] => 25
+)
+
+Array
+(
+    [username] => JohnDoe
+    [password] => password123
+    [age] => 25
+)
+
+Array
+(
+    [username] => testingweb
+    [password] => minhaj@2211
+    [age] => 2
+)
+

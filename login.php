@@ -1,23 +1,46 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:3000"); // Adjust in production
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// ✅ Allow CORS for frontend
+header("Access-Control-Allow-Origin: http://localhost:3000"); // Change this if frontend is hosted elsewhere
 header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json");
 
+// ✅ Handle preflight request (OPTIONS)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit; // Handle CORS preflight
+    http_response_code(200);
+    exit;
 }
 
-require_once 'db.php';
-require_once 'jwt.php'; // JWT functions (explained below)
+// ✅ Include database connection
+require_once __DIR__ . '/db/db.php';
 
-// Read input data
+// ✅ Ensure request method is POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405); // Method Not Allowed
+    echo json_encode(["success" => false, "message" => "Invalid request method."]);
+    exit;
+}
+
+// ✅ Read JSON input
 $input = file_get_contents("php://input");
 $data = json_decode($input, true);
 
-if (!$data || empty($data['username']) || empty($data['password'])) {
-    http_response_code(400); // Bad Request
-    echo json_encode(["success" => false, "message" => "Missing username or password."]);
+// ✅ Check if JSON is valid
+if (!$data) {
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "Invalid JSON input."]);
+    exit;
+}
+
+// ✅ Validate input fields
+if (empty($data['username']) || empty($data['password'])) {
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "Username and password are required."]);
     exit;
 }
 
@@ -25,25 +48,24 @@ $username = trim($data['username']);
 $password = trim($data['password']);
 
 try {
-    $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = ?");
+    // ✅ Fetch user from database
+    $stmt = $conn->prepare("SELECT id, password FROM users WHERE username = ?");
     $stmt->execute([$username]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $user = $stmt->fetch();
 
-    if ($user && password_verify($password, $user['password'])) {
-        // Generate JWT token
-        $token = createJWT($user['id'], $user['username']);
-
-        echo json_encode([
-            "success" => true,
-            "message" => "Login successful.",
-            "token" => $token
-        ]);
-    } else {
-        http_response_code(401); // Unauthorized
+    // ✅ Check if user exists and password is correct
+    if (!$user || !password_verify($password, $user['password'])) {
+        http_response_code(401);
         echo json_encode(["success" => false, "message" => "Invalid username or password."]);
+        exit;
     }
+
+    // ✅ Successful login
+    http_response_code(200);
+    echo json_encode(["success" => true, "message" => "Login successful!", "user_id" => $user['id']]);
 } catch (PDOException $e) {
-    error_log("Login error: " . $e->getMessage());
+    // ✅ Log error and return a proper response
+    error_log("Database error: " . $e->getMessage());
     http_response_code(500);
     echo json_encode(["success" => false, "message" => "Internal server error."]);
 }

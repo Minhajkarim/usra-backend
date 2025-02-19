@@ -1,9 +1,9 @@
 <?php
-require_once 'db/db.php'; // Include db.php from the db subfolder
+require_once __DIR__ . '/db/db.php';
 
-if ($conn->connect_error) {
-    die("Database connection failed: " . $conn->connect_error);
+if ($conn) {
+    echo "Database connected successfully!";
 } else {
-    echo "Database connection successful!";
+    echo "Database connection failed!";
 }
 ?>
